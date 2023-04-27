@@ -36,3 +36,6 @@ A SoftRas Renderer based on CPU without third party besides Qt as Ui
 * Loop Subivison
 * Multithread acceleration
 * Many interactive features
+## Display
+### Shadow
+<img src="Display/shadowmap.gif">
