@@ -1,41 +1,88 @@
 # SRasRenderer
+
 A SoftRas Renderer based on CPU without third party besides Qt as Ui
 <img src="Display/display2.png">
 <img src="Display/display1.png">
 <img src="Display/display3.png">
 <img src="Display/display4.png">
+
 ## Features
+
 ### Load Module
+
 * Model(only .obj)
 * Texture including diffuse, normal and specular
 * Cubemapped Skybox
+
 ### Render Pipeline
+
 #### Vertex Shader
+
 * MVP Matrix
 * TBN Matrix
 * Transformation of Normal(Model Space->View Space)
+
+
 #### Fragment Shader
+
 * Blinn-Phong reflection model
+
+
 #### Tessellation Shader
+
 * Phong tessellation
+
+
 #### Culling
+
 * View Frustum Culling
 * Viewport Culling(Sutherland-Hodgman)
 * Back-face Culling
+
+
 #### Rasteration
+
 * Early-z
 * Perspective correct interpolation
 * Texture mapping
+
+
 #### Anti-aliasing
+
 * Oversampling including SSAA and MSAA
 * Post Processing including FXAA
+
+
 #### Shadow
 * Screen space shadowmap
+
+
 #### Others
 * Bresenham's line algorithm
 * Loop Subivison
 * Multithread acceleration
 * Many interactive features
+
+
 ## Display
+
 ### Shadow
+
 <img src="Display/shadowmap.gif">
+
+### Tessellation
+
+<img src="Display/tessellation.gif">
+
+### Skybox
+
+<img src="Display/skybox.gif">
+
+### Anti-aliasing
+
+<img src="Display/aliasing.png"> <img src="Display/SSAA.png">
+<img src="Display/MSAA.png"> <img src="Display/FXAA.png">
+
+## Third Party
+
+* Qt5.15.2 as GUI
