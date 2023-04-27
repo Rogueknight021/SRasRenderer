@@ -68,20 +68,20 @@ A SoftRas Renderer based on CPU without third party besides Qt as Ui
 
 ### Shadow
 
-<img src="Display/shadowmap.gif">
+<img src="Display/shadowmap.gif" width="1000">
 
 ### Tessellation
 
-<img src="Display/tessellation.gif">
+<img src="Display/tessellation.gif" width="1000">
 
 ### Skybox
 
-<img src="Display/skybox.gif">
+<img src="Display/skybox.gif" width="1000">
 
 ### Anti-aliasing
 
-<img src="Display/aliasing.png" width="410"> <img src="Display/SSAA.png" width="410">
-<img src="Display/MSAA.png" width="410"> <img src="Display/FXAA.png" width="410">
+<img src="Display/aliasing.png" width="500"> <img src="Display/SSAA.png" width="500">
+<img src="Display/MSAA.png" width="500"> <img src="Display/FXAA.png" width="500">
 
 ## Third Party
 
