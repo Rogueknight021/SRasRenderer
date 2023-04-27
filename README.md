@@ -1,5 +1,9 @@
 # SRasRenderer
 A SoftRas Renderer based on CPU without third party besides Qt as Ui
+<img src="Display/display2.png">
+<img src="Display/display1.png">
+<img src="Display/display3.png">
+<img src="Display/display4.png">
 ## Features
 ### Load Module
 * Model(only .obj)
