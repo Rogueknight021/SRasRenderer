@@ -36,5 +36,3 @@ A SoftRas Renderer based on CPU without third party besides Qt as Ui
 * Loop Subivison
 * Multithread acceleration
 * Many interactive features
-## Third Party
-* QT 5.15.2 as GUI
