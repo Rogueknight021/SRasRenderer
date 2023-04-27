@@ -83,3 +83,7 @@ A SoftRas Renderer based on CPU without third party besides Qt as Ui
 ## Third Party
 
 * Qt5.15.2 as GUI
+
+## Install
+
+Executable file package for Windows10/64 bit can download from [Release page](https://github.com/Rogueknight021/SRasRenderer/releases/tag/V1.0) and use it directly
