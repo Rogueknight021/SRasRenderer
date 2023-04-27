@@ -80,8 +80,8 @@ A SoftRas Renderer based on CPU without third party besides Qt as Ui
 
 ### Anti-aliasing
 
-<img src="Display/aliasing.png"> <img src="Display/SSAA.png">
-<img src="Display/MSAA.png"> <img src="Display/FXAA.png">
+<img src="Display/aliasing.png" width="410"> <img src="Display/SSAA.png" width="410">
+<img src="Display/MSAA.png" width="410"> <img src="Display/FXAA.png" width="410">
 
 ## Third Party
 
