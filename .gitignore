@@ -338,3 +338,7 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/Renderer/resources
+/Renderer/Renderer.vcxproj
+/Renderer.sln
+/Renderer/Renderer.vcxproj.filters

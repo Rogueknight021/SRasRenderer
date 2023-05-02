@@ -201,7 +201,7 @@ std::vector<Triangle*> TessellationShader::DomainShader(std::vector<Vertex>& ver
 
 vector_3f phong_shader(const std::vector<light>& lights, const fragment_shader_payload& payload)
 {
-	vector_3f &normal=payload.normal;
+	vector_3f &normal=payload.normal.normalized();
 	vector_3f &pos=payload.viewspace_pos;
 	//Init
 	vector_3f ka(0.005, 0.005, 0.005);

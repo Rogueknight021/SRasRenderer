@@ -444,7 +444,7 @@ Vertex rasterizer::LinearInterpolate(const Vertex& v1, const Vertex& v2, const f
 	Vertex v;
 	v.pos = (1 - weight) * v1.pos + weight * v2.pos;
 	v.normal = (1 - weight) * v1.normal + weight * v2.normal;
-	v.color = (1 - weight) * v1.color + weight * v2.color;
+	//v.color = (1 - weight) * v1.color + weight * v2.color;
 	v.uv_pos = (1 - weight) * v1.uv_pos + weight * v2.uv_pos;
 	v.viewspace_pos = (1 - weight) * v1.viewspace_pos + weight * v2.viewspace_pos;
 	return v;

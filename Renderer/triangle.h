@@ -14,7 +14,7 @@ public:
 	int id;
 	vector_4f pos;
 	vector_3f normal;
-	vector_3f color;
+	//vector_3f color;
 	vector_2f uv_pos;
 	vector_3f viewspace_pos;
 	HalfEdge* half_edge;
