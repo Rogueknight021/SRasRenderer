@@ -13,6 +13,7 @@ void rasterizer::Render(model& obj, int s, int e)
 	obj_vs.Init(obj.Model, main_camera->View, main_camera->Projection, lights[0]);
 	if (!uv_normal->isNull() && obj_vs.uv_normal->isNull())
 		obj_vs.uv_normal = uv_normal;
+	float& zN = main_camera->zNear;
 	for (int j = s; j < e; j++)
 	{
 		std::vector<Vertex> tmp_vertexes(3);
@@ -44,14 +45,34 @@ void rasterizer::Render(model& obj, int s, int e)
 		for (auto& Tr : Triangles)
 		{
 			obj_vs.shadow_shader(Tr->vertex);
-			for (int i = 0; i < 3; i++)
+			bool isCulling = false;
+			if (main_camera->type)
 			{
-				Tr->vertex[i].pos.x /= Tr->vertex[i].pos.w;
-				Tr->vertex[i].pos.y /= Tr->vertex[i].pos.w;
-				Tr->vertex[i].pos.z /= Tr->vertex[i].pos.w;
+				for (int i = 0; i < 3; i++)
+				{
+					if (Tr->vertex[i].pos.w > zN)
+					{
+						isCulling = true;
+						break;
+					}
+					Tr->vertex[i].pos.x /= Tr->vertex[i].pos.w;
+					Tr->vertex[i].pos.y /= Tr->vertex[i].pos.w;
+					Tr->vertex[i].pos.z /= Tr->vertex[i].pos.w;
+				}
+			}
+			else
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					if (Tr->vertex[i].pos.z < -1.f || Tr->vertex[i].pos.z>1.f)
+					{
+						isCulling = true;
+						break;
+					}
+				}
 			}
 			//viewfrustum culling
-			if (is_open_viewfrustumcull && !ViewFrustumCull(Tr->vertex[0].pos, Tr->vertex[1].pos, Tr->vertex[2].pos))
+			if (is_open_viewfrustumcull && (isCulling||!ViewFrustumCull(Tr->vertex[0].pos, Tr->vertex[1].pos, Tr->vertex[2].pos)))
 				continue;
 			//viewport culling
 			if (is_open_viewportcull && !AllVertexInsideViewport(Tr->vertex))
@@ -135,8 +156,17 @@ void rasterizer::Render(model& obj, light& l)
 				vertexes[i].pos.z /= vertexes[i].pos.w;
 			}
 		}
+		bool isCulling = false;
+		for (int i = 0; i < 3; i++)
+		{
+			if (vertexes[i].pos.z < -1.f)
+			{
+				isCulling = true;
+				break;
+			}
+		}
 		//viewfrustum culling
-		if (is_open_viewfrustumcull && !ViewFrustumCull(vertexes[0].pos, vertexes[1].pos, vertexes[2].pos))
+		if (is_open_viewfrustumcull && (isCulling||!ViewFrustumCull(vertexes[0].pos, vertexes[1].pos, vertexes[2].pos)))
 			continue;
 		//viewport culling
 		if (is_open_viewportcull && !AllVertexInsideViewport(vertexes))
@@ -342,20 +372,19 @@ void rasterizer::Multithread(Triangle& t, std::vector<std::thread>& pixel_thread
 
 bool rasterizer::ViewFrustumCull(const vector_4f& v1, const vector_4f& v2, const vector_4f& v3)
 {
-	;
 	//get AABB
 	vector_3f minPoint, maxPoint;
 	minPoint.x = std::min(v1.x, std::min(v2.x, v3.x));
 	minPoint.y = std::min(v1.y, std::min(v2.y, v3.y));
-	minPoint.z = std::min(v1.z, std::min(v2.z, v3.z));
+	//minPoint.z = std::min(v1.z, std::min(v2.z, v3.z));
 	maxPoint.x = std::max(v1.x, std::max(v2.x, v3.x));
 	maxPoint.y = std::max(v1.y, std::max(v2.y, v3.y));
-	maxPoint.z = std::max(v1.z, std::max(v2.z, v3.z));
+	//maxPoint.z = std::max(v1.z, std::max(v2.z, v3.z));
 	//zNear and zFar only retain the object in the frustum completely 
-	if (minPoint.z >= 1 || maxPoint.z >= 1)
-		return false;
-	if (minPoint.z <= -1 || maxPoint.z <= -1)
-		return false;
+	//if (minPoint.z >= 1 || maxPoint.z >= 1)
+	//	return false;
+	//if (minPoint.z <= -1 || maxPoint.z <= -1)
+	//	return false;
 	if (minPoint.x >= 1 && maxPoint.x >= 1)
 		return false;
 	if (minPoint.x <= -1 && maxPoint.x <= -1)
