@@ -31,32 +31,52 @@ void VertexShader::shadow_shader(std::vector<Vertex>& v)
 	if (!uv_normal->isNull())
 	{
 		//calculate TBN
-		for (int i = 0; i < 3; i++)
-		{
-			vector_3f E1 = to_vector_3f(v[(i + 1) % 3].pos - v[i].pos);
-			vector_3f E2 = to_vector_3f(v[(i + 2) % 3].pos - v[i].pos);
-			vector_2f uv1 = v[(i + 1) % 3].uv_pos - v[i].uv_pos;
-			vector_2f uv2 = v[(i + 2) % 3].uv_pos - v[i].uv_pos;
-			vector_3f& normal = v[i].normal;
-			
-			vector_3f tangent = (uv1.y * E2 - uv2.y * E1) / (uv1.y * uv2.x - uv2.y * uv1.x);
-			//vector_3f bitangent = ( uv2.x * E1 - uv1.x * E2 ) / (uv1.y * uv2.x - uv2.y * uv1.x);
-			//orthogonalization
-			tangent = (tangent - vector_dotproduct(tangent, normal) * normal).normalized();
-			vector_3f bitangent = vector_crossproduct(normal, tangent);
-			QColor normaluv_pixel;
-			normaluv_pixel = uv_normal->pixel(v[i].uv_pos.x, v[i].uv_pos.y);
-			vector_3f normal_deviation = {
-				2.f * (float)normaluv_pixel.red() / 255.f - 1.f,
-				2.f * (float)normaluv_pixel.green() / 255.f - 1.f,
-				2.f * (float)normaluv_pixel.blue() / 255.f - 1.f
-			};
-			//TBN->WORLD
-			normal_deviation.x = normal_deviation.x * tangent.x + normal_deviation.x * bitangent.x + normal_deviation.x * normal.x;
-			normal_deviation.y = normal_deviation.y * tangent.y + normal_deviation.y * bitangent.y + normal_deviation.y * normal.y;
-			normal_deviation.z = normal_deviation.z * tangent.z + normal_deviation.z * bitangent.z + normal_deviation.z * normal.z;
-			normal += normal_deviation;
-		}
+		vector_3f E1 = to_vector_3f(v[1].pos - v[0].pos);
+		vector_3f E2 = to_vector_3f(v[2].pos - v[0].pos);
+		vector_2f uv1 = v[1].uv_pos - v[0].uv_pos;
+		vector_2f uv2 = v[2].uv_pos - v[0].uv_pos;
+		vector_3f& normal = v[0].normal;
+
+		vector_3f tangent = (uv1.y * E2 - uv2.y * E1) / (uv1.y * uv2.x - uv2.y * uv1.x);
+		//vector_3f bitangent = ( uv2.x * E1 - uv1.x * E2 ) / (uv1.y * uv2.x - uv2.y * uv1.x);
+		//orthogonalization
+		tangent = (tangent - vector_dotproduct(tangent, normal) * normal).normalized();
+		vector_3f bitangent = vector_crossproduct(normal, tangent);
+		TBN[0][0] = tangent.x;
+		TBN[0][1] = bitangent.x;
+		TBN[0][2] = normal.x;
+		TBN[1][0] = tangent.y;
+		TBN[1][1] = bitangent.y;
+		TBN[1][2] = normal.y;
+		TBN[2][0] = tangent.z;
+		TBN[2][1] = bitangent.z;
+		TBN[2][2] = normal.z;
+		//for (int i = 0; i < 3; i++)
+		//{
+		//	vector_3f E1 = to_vector_3f(v[(i + 1) % 3].pos - v[i].pos);
+		//	vector_3f E2 = to_vector_3f(v[(i + 2) % 3].pos - v[i].pos);
+		//	vector_2f uv1 = v[(i + 1) % 3].uv_pos - v[i].uv_pos;
+		//	vector_2f uv2 = v[(i + 2) % 3].uv_pos - v[i].uv_pos;
+		//	vector_3f& normal = v[i].normal;
+		//	
+		//	vector_3f tangent = (uv1.y * E2 - uv2.y * E1) / (uv1.y * uv2.x - uv2.y * uv1.x);
+		//	//vector_3f bitangent = ( uv2.x * E1 - uv1.x * E2 ) / (uv1.y * uv2.x - uv2.y * uv1.x);
+		//	//orthogonalization
+		//	tangent = (tangent - vector_dotproduct(tangent, normal) * normal).normalized();
+		//	vector_3f bitangent = vector_crossproduct(normal, tangent);
+		//	QColor normaluv_pixel;
+		//	normaluv_pixel = uv_normal->pixel(v[i].uv_pos.x, v[i].uv_pos.y);
+		//	vector_3f normal_deviation = {
+		//		2.f * (float)normaluv_pixel.red() / 255.f - 1.f,
+		//		2.f * (float)normaluv_pixel.green() / 255.f - 1.f,
+		//		2.f * (float)normaluv_pixel.blue() / 255.f - 1.f
+		//	};
+		//	//TBN->WORLD
+		//	normal_deviation.x = normal_deviation.x * tangent.x + normal_deviation.x * bitangent.x + normal_deviation.x * normal.x;
+		//	normal_deviation.y = normal_deviation.y * tangent.y + normal_deviation.y * bitangent.y + normal_deviation.y * normal.y;
+		//	normal_deviation.z = normal_deviation.z * tangent.z + normal_deviation.z * bitangent.z + normal_deviation.z * normal.z;
+		//	normal += normal_deviation;
+		//}
 	}
 	for (int i = 0; i < 3; i++)
 	{

@@ -33,6 +33,7 @@ public:
 public:
 	matrix_4f mvp_inverse;
 	QImage* uv_normal = new QImage;
+	float TBN[3][3];
 private:
 	matrix_4f mvp,mv,inv_trans;
 	matrix_4f Model, View, Projection;

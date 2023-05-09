@@ -31,27 +31,27 @@ void Renderer::on_load_model_triggered()
 
 void Renderer::on_load_diffuseuv_clicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(this, "choose uv", "", "uv (*.png);;tif (*tif)");
+    QString file_name = QFileDialog::getOpenFileName(this, "choose uv", "", "png (*.png);;tif (*.tif);;jpg (*.jpg)");
     if(!ui.widget->models.empty())
         load_uv(ui.widget->models[0], file_name,uv_type::DIFFUSE);
 }
 
 void Renderer::on_load_normaluv_clicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(this, "choose uv", "", "uv (*.png);;tif (*tif)");
+    QString file_name = QFileDialog::getOpenFileName(this, "choose uv", "", "png (*.png);;tif (*.tif);;jpg (*.jpg)");
     if (!ui.widget->models.empty())
         load_uv(ui.widget->models[0], file_name, uv_type::NORMAL);
 }
 
 void Renderer::on_load_specularuv_clicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(this, "choose uv", "", "uv (*.png);;tif (*tif)");
+    QString file_name = QFileDialog::getOpenFileName(this, "choose uv", "", "png (*.png);;tif (*.tif);;jpg (*.jpg)");
     if (!ui.widget->models.empty())
         load_uv(ui.widget->models[0], file_name, uv_type::SPECULAR);
 }
 void Renderer::on_load_cubemap_clicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(this, "choose cubemap", "", "cubemap (*.png);;tif (*tif)");
+    QString file_name = QFileDialog::getOpenFileName(this, "choose cubemap", "", "png (*.png);;tif (*.tif)");
     load_cubemap(ui.widget->skybox, file_name);
 }
 

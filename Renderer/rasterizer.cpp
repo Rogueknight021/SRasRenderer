@@ -20,7 +20,7 @@ void rasterizer::Render(model& obj, int s, int e)
 		tmp_vertexes[0] = *obj.vs[obj.ind[j].x - 1];
 		tmp_vertexes[1] = *obj.vs[obj.ind[j].y - 1];
 		tmp_vertexes[2] = *obj.vs[obj.ind[j].z - 1];
-		if (!obj.uv.isNull())
+		if (obj.uv_height!=0)
 		{
 			tmp_vertexes[0].uv_pos = { obj.uv_pos[obj.uv_ind[j].x - 1].x * uv_width,obj.uv_pos[obj.uv_ind[j].x - 1].y * uv_height };
 			tmp_vertexes[1].uv_pos = { obj.uv_pos[obj.uv_ind[j].y - 1].x * uv_width,obj.uv_pos[obj.uv_ind[j].y - 1].y * uv_height };
@@ -41,10 +41,16 @@ void rasterizer::Render(model& obj, int s, int e)
 		//	Triangles.push_back( {new Triangle(tmp_vertexes)});
 		//else
 		//	Triangles= obj.LoopSubdivision(tmp_vertexes);
-
 		for (auto& Tr : Triangles)
 		{
+			mtx.lock();
 			obj_vs.shadow_shader(Tr->vertex);
+			float TBN[3][3];
+			if (!uv_normal->isNull())
+				for (int i = 0; i < 3; i++)
+					for (int j = 0; j < 3; j++)
+						TBN[i][j] = obj_vs.TBN[i][j];
+			mtx.unlock();
 			bool isCulling = false;
 			if (main_camera->type)
 			{
@@ -91,6 +97,8 @@ void rasterizer::Render(model& obj, int s, int e)
 					continue;
 				Triangle t;
 				t.set_vertexs(Tr->vertex[0], Tr->vertex[i + 1], Tr->vertex[i + 2]);
+				if (!uv_normal->isNull())
+					memcpy(t.TBN, TBN, sizeof(TBN));
 				switch (r_t)
 				{
 				case render_type::Dot:
@@ -639,6 +647,12 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 						int index = (y + j - 0.25) * 2 * width * 2 + (x + i - 0.25) * 2;
 						if (depth_buf_oversampling[index] <= z_interpolated || z_interpolated < 0.1 || z_interpolated>50) continue;
 						depth_buf_oversampling[index] = z_interpolated;
+
+						vector_3f interpolated_normal = alpha * t.vertex[0].normal / t.vertex[0].pos.w + beta * t.vertex[1].normal / t.vertex[1].pos.w + gamma * t.vertex[2].normal / t.vertex[2].pos.w;
+						interpolated_normal *= Z;
+						vector_3f interpolated_viewspace_p = alpha * t.vertex[0].viewspace_pos / t.vertex[0].pos.w + beta * t.vertex[1].viewspace_pos / t.vertex[1].pos.w + gamma * t.vertex[2].viewspace_pos / t.vertex[2].pos.w;
+						interpolated_viewspace_p *= Z;
+
 						if (uv_height != 0)
 						{
 							float interpolated_uv_x;
@@ -661,6 +675,15 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 							{
 								QColor normaluv_pixel;
 								normaluv_pixel = uv_normal->pixel(interpolated_uv_x, interpolated_uv_y);
+								normal_deviation = {
+									2.f * (float)normaluv_pixel.red() / 255.f - 1.f,
+									2.f * (float)normaluv_pixel.green() / 255.f - 1.f,
+									2.f * (float)normaluv_pixel.blue() / 255.f - 1.f
+								};
+								normal_deviation.x = normal_deviation.x * t.TBN[0][0] + normal_deviation.x * t.TBN[0][1] + normal_deviation.x * t.TBN[0][2];
+								normal_deviation.y = normal_deviation.y * t.TBN[1][0] + normal_deviation.y * t.TBN[1][1] + normal_deviation.y * t.TBN[1][2];
+								normal_deviation.z = normal_deviation.z * t.TBN[2][0] + normal_deviation.z * t.TBN[2][1] + normal_deviation.z * t.TBN[2][2];
+								interpolated_normal += normal_deviation;
 							}
 							if (!uv_specular->isNull())
 							{
@@ -672,13 +695,9 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 								};
 							}
 						}
-						vector_3f interpolated_normal = alpha * t.vertex[0].normal / t.vertex[0].pos.w + beta * t.vertex[1].normal / t.vertex[1].pos.w + gamma * t.vertex[2].normal / t.vertex[2].pos.w;
-						interpolated_normal *= Z;
-						vector_3f interpolated_viewspace_p = alpha * t.vertex[0].viewspace_pos / t.vertex[0].pos.w + beta * t.vertex[1].viewspace_pos / t.vertex[1].pos.w + gamma * t.vertex[2].viewspace_pos / t.vertex[2].pos.w;
-						interpolated_viewspace_p *= Z;
-						float z = alpha * t.vertex[0].pos.z / t.vertex[0].pos.w + beta * t.vertex[1].pos.z / t.vertex[1].pos.w + gamma * t.vertex[2].pos.z / t.vertex[2].pos.w;
-						z = Z * z;
-						vector_3f tmp = obj_vs.shadow_shader(Screen2World(x, y, z, Z));
+						//float z = alpha * t.vertex[0].pos.z / t.vertex[0].pos.w + beta * t.vertex[1].pos.z / t.vertex[1].pos.w + gamma * t.vertex[2].pos.z / t.vertex[2].pos.w;
+						//z = Z * z;
+						vector_3f tmp = obj_vs.shadow_shader(Screen2World(x, y, z_interpolated, Z));
 
 						fragment_shader_payload payload(interpolated_viewspace_p, tmp, specular_intensity, interpolated_color, interpolated_normal);
 						vector_3f pixel_color = fragment_shader(lights, payload);
@@ -699,6 +718,10 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 						float Z = 1.0 / (alpha / t.vertex[0].pos.w + beta / t.vertex[1].pos.w + gamma / t.vertex[2].pos.w);
 						if (!is_sampling)
 						{
+							vector_3f interpolated_normal = alpha * t.vertex[0].normal / t.vertex[0].pos.w + beta * t.vertex[1].normal / t.vertex[1].pos.w + gamma * t.vertex[2].normal / t.vertex[2].pos.w;
+							interpolated_normal *= Z;
+							vector_3f interpolated_viewspace_p = alpha * t.vertex[0].viewspace_pos / t.vertex[0].pos.w + beta * t.vertex[1].viewspace_pos / t.vertex[1].pos.w + gamma * t.vertex[2].viewspace_pos / t.vertex[2].pos.w;
+							interpolated_viewspace_p *= Z;
 							if (uv_height != 0)
 							{
 								float interpolated_uv_x;
@@ -721,6 +744,15 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 								{
 									QColor normaluv_pixel;
 									normaluv_pixel = uv_normal->pixel(interpolated_uv_x, interpolated_uv_y);
+									normal_deviation = {
+										2.f * (float)normaluv_pixel.red() / 255.f - 1.f,
+										2.f * (float)normaluv_pixel.green() / 255.f - 1.f,
+										2.f * (float)normaluv_pixel.blue() / 255.f - 1.f
+									};
+									normal_deviation.x = normal_deviation.x * t.TBN[0][0] + normal_deviation.x * t.TBN[0][1] + normal_deviation.x * t.TBN[0][2];
+									normal_deviation.y = normal_deviation.y * t.TBN[1][0] + normal_deviation.y * t.TBN[1][1] + normal_deviation.y * t.TBN[1][2];
+									normal_deviation.z = normal_deviation.z * t.TBN[2][0] + normal_deviation.z * t.TBN[2][1] + normal_deviation.z * t.TBN[2][2];
+									interpolated_normal += normal_deviation;
 								}
 								if (!uv_specular->isNull())
 								{
@@ -732,13 +764,9 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 									};
 								}
 							}
-							vector_3f interpolated_normal = alpha * t.vertex[0].normal / t.vertex[0].pos.w + beta * t.vertex[1].normal / t.vertex[1].pos.w + gamma * t.vertex[2].normal / t.vertex[2].pos.w;
-							interpolated_normal *= Z;
-							vector_3f interpolated_viewspace_p = alpha * t.vertex[0].viewspace_pos / t.vertex[0].pos.w + beta * t.vertex[1].viewspace_pos / t.vertex[1].pos.w + gamma * t.vertex[2].viewspace_pos / t.vertex[2].pos.w;
-							interpolated_viewspace_p *= Z;
-							float z = alpha * t.vertex[0].pos.z / t.vertex[0].pos.w + beta * t.vertex[1].pos.z / t.vertex[1].pos.w + gamma * t.vertex[2].pos.z / t.vertex[2].pos.w;
-							z = Z * z;
-							vector_3f tmp = obj_vs.shadow_shader(Screen2World(x, y, z, Z));
+							float z_interpolated = alpha * t.vertex[0].pos.z / t.vertex[0].pos.w + beta * t.vertex[1].pos.z / t.vertex[1].pos.w + gamma * t.vertex[2].pos.z / t.vertex[2].pos.w;
+							z_interpolated *= Z;
+							vector_3f tmp = obj_vs.shadow_shader(Screen2World(x, y, z_interpolated, Z));
 
 							fragment_shader_payload payload(interpolated_viewspace_p, tmp, specular_intensity, interpolated_color, interpolated_normal);
 							pixel_color = fragment_shader(lights, payload);
@@ -766,6 +794,10 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 				if (depth_buf[y * width + x] <= z_interpolated) continue;
 				depth_buf[y * width + x] = z_interpolated;
 
+				vector_3f interpolated_normal = alpha * t.vertex[0].normal / t.vertex[0].pos.w + beta * t.vertex[1].normal / t.vertex[1].pos.w + gamma * t.vertex[2].normal / t.vertex[2].pos.w;
+				interpolated_normal *= Z;
+				vector_3f interpolated_viewspace_p = alpha * t.vertex[0].viewspace_pos / t.vertex[0].pos.w + beta * t.vertex[1].viewspace_pos / t.vertex[1].pos.w + gamma * t.vertex[2].viewspace_pos / t.vertex[2].pos.w;
+				interpolated_viewspace_p *= Z;
 				if (uv_height != 0)
 				{
 					float interpolated_uv_x;
@@ -784,16 +816,20 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 						};
 					}
 					//if (interpolated_uv_x<0 || interpolated_uv_x>uv_width || interpolated_uv_y<0 || interpolated_uv_y>uv_height) continue;
-					//if (!uv_normal.isNull())
-					//{
-					//	QColor normaluv_pixel;
-					//	normaluv_pixel = uv_normal.pixel(interpolated_uv_x, interpolated_uv_y);
-					//	normal_deviation = {
-					//		2.f * (float)normaluv_pixel.red() / 255.f - 1.f,
-					//		2.f * (float)normaluv_pixel.green() / 255.f - 1.f,
-					//		2.f * (float)normaluv_pixel.blue() / 255.f - 1.f
-					//	};
-					//}
+					if (!uv_normal->isNull())
+					{
+						QColor normaluv_pixel;
+						normaluv_pixel = uv_normal->pixel(interpolated_uv_x, interpolated_uv_y);
+						normal_deviation = {
+							2.f * (float)normaluv_pixel.red() / 255.f - 1.f,
+							2.f * (float)normaluv_pixel.green() / 255.f - 1.f,
+							2.f * (float)normaluv_pixel.blue() / 255.f - 1.f
+						};
+						normal_deviation.x = normal_deviation.x * t.TBN[0][0] + normal_deviation.x * t.TBN[0][1] + normal_deviation.x * t.TBN[0][2];
+						normal_deviation.y = normal_deviation.y * t.TBN[1][0] + normal_deviation.y * t.TBN[1][1] + normal_deviation.y * t.TBN[1][2];
+						normal_deviation.z = normal_deviation.z * t.TBN[2][0] + normal_deviation.z * t.TBN[2][1] + normal_deviation.z * t.TBN[2][2];
+						interpolated_normal += normal_deviation;
+					}
 					if (!uv_specular->isNull())
 					{
 						QColor specularuv_pixel = uv_specular->pixel(interpolated_uv_x, interpolated_uv_y);
@@ -804,15 +840,9 @@ void rasterizer::RasterizeTriangle(Triangle& t, int x_min, int x_max, int y_min,
 						};
 					}
 				}
-				vector_3f interpolated_normal = alpha * t.vertex[0].normal / t.vertex[0].pos.w + beta * t.vertex[1].normal / t.vertex[1].pos.w + gamma * t.vertex[2].normal / t.vertex[2].pos.w;
-				interpolated_normal *= Z;
-				//if (!uv_normal.isNull())
-				//	interpolated_normal += normal_deviation;
-				vector_3f interpolated_viewspace_p = alpha * t.vertex[0].viewspace_pos / t.vertex[0].pos.w + beta * t.vertex[1].viewspace_pos / t.vertex[1].pos.w + gamma * t.vertex[2].viewspace_pos / t.vertex[2].pos.w;
-				interpolated_viewspace_p *= Z;
-				float z = alpha * t.vertex[0].pos.z / t.vertex[0].pos.w + beta * t.vertex[1].pos.z / t.vertex[1].pos.w + gamma * t.vertex[2].pos.z / t.vertex[2].pos.w;
-				z *= Z;
-				vector_3f tmp = obj_vs.shadow_shader(Screen2World(x, y, z, Z));
+				//float z = alpha * t.vertex[0].pos.z / t.vertex[0].pos.w + beta * t.vertex[1].pos.z / t.vertex[1].pos.w + gamma * t.vertex[2].pos.z / t.vertex[2].pos.w;
+				//z *= Z;
+				vector_3f tmp = obj_vs.shadow_shader(Screen2World(x, y, z_interpolated, Z));
 				fragment_shader_payload payload(interpolated_viewspace_p, tmp, specular_intensity, interpolated_color, interpolated_normal);
 
 				vector_3f pixel_color = fragment_shader(lights, payload);

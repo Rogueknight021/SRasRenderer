@@ -10,6 +10,7 @@
 #include<mutex>
 #include<QTime>
 #include<tuple>
+#include<mutex>
 #define FXAA_ABSOLUTE_LUMA_THRESHOLD 0.0312
 #define FXAA_RELATIVE_LUMA_THRESHOLD 0.125
 #define FXAA_MAX_EAGE_SEARCH_SAMPLE_COUNT 5
@@ -126,5 +127,6 @@ private:
 	int geo_threads_num = 1;
 	int ras_threads_num = 1;
 	std::vector<std::thread> vertex_threads;
+	std::mutex mtx;
 
 };
