@@ -28,7 +28,9 @@ void VertexShader::Init(const matrix_4f& m, const matrix_4f& v, const matrix_4f&
 
 void VertexShader::shadow_shader(std::vector<Vertex>& v)
 {
-	if (!uv_normal->isNull())
+	for(int i=0;i<3;i++)
+		v[i].normal = to_vector_3f(inv_trans * to_vector_4f(v[i].normal, 0)).normalized();
+	if (hasUVnormal)
 	{
 		//calculate TBN
 		vector_3f E1 = to_vector_3f(v[1].pos - v[0].pos);
@@ -41,7 +43,7 @@ void VertexShader::shadow_shader(std::vector<Vertex>& v)
 		//vector_3f bitangent = ( uv2.x * E1 - uv1.x * E2 ) / (uv1.y * uv2.x - uv2.y * uv1.x);
 		//orthogonalization
 		tangent = (tangent - vector_dotproduct(tangent, normal) * normal).normalized();
-		vector_3f bitangent = vector_crossproduct(normal, tangent);
+		vector_3f bitangent = vector_crossproduct(normal, tangent).normalized();
 		TBN[0][0] = tangent.x;
 		TBN[0][1] = bitangent.x;
 		TBN[0][2] = normal.x;
@@ -82,7 +84,6 @@ void VertexShader::shadow_shader(std::vector<Vertex>& v)
 	{
 		v[i].viewspace_pos = to_vector_3f(mv * v[i].pos);
 		v[i].pos = mvp * v[i].pos;
-		v[i].normal = to_vector_3f(inv_trans * to_vector_4f(v[i].normal, 0)).normalized();
 	}
 }
 
@@ -121,7 +122,7 @@ void VertexShader::test_shader(std::vector<Vertex>& v)
 
 void VertexShader::clear()
 {
-	uv_normal = new QImage;
+	hasUVnormal = false;
 }
 
 void TessellationShader::HullShader(int& dp)

@@ -44,6 +44,7 @@ public:
 	bool InsideTriangle(const float& x, const float& y, const std::vector<Vertex>& v);
 	std::tuple<float, float, float> ComputeBarycentric2D(float x, float y, const std::vector<Vertex>& v);
 	vector_4f Screen2World(float x,float y,float& z,float& w);
+	void TextureMapping(float& alpha, float& beta, float& gamma, float& Z,Triangle& t, vector_3f& interpolated_color, vector_3f& interpolated_normal, vector_3f& specular_intensity);
 	//FXAA
 	void FXAA();//FXAA 3.1 quality
 	float ComputeLuma(QColor& color);

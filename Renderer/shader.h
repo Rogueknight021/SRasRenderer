@@ -32,7 +32,8 @@ public:
 	void clear();
 public:
 	matrix_4f mvp_inverse;
-	QImage* uv_normal = new QImage;
+	//QImage* uv_normal = new QImage;
+	bool hasUVnormal = false;
 	float TBN[3][3];
 private:
 	matrix_4f mvp,mv,inv_trans;

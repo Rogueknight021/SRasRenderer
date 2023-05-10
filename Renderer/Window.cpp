@@ -256,7 +256,7 @@ void Window::test()
     //set_anti_aliasing_type(anti_aliasing_type::SSAA);
     std::string path = "C:/Users/86183/Desktop/course/graduation design/Renderer/Renderer/models/spot/spot_triangulated_good.obj";
     //std::string path = "C:/Users/86183/Desktop/course/graduation design/Renderer/Renderer/models/cube/cube.obj";
-    //load_obj(models, path);
+    load_obj(models, path);
     //models[0].subdivision_level = 1;
     //vector_3i tmp= models[0].ind[0];
     //std::vector<Vertex> tmp_vs = { *models[0].vs[tmp.x - 1] ,*models[0].vs[tmp.y - 1] ,*models[0].vs[tmp.z- 1] };
